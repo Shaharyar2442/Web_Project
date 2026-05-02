@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-textLight font-body relative min-h-screen overflow-x-hidden;
+  }
+  
+  /* Subtle grain texture overlay */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-wide;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-textLight font-bold py-3 px-6 rounded-sm uppercase tracking-wider transition-all duration-200 hover:bg-primaryHover hover:shadow-[0_0_15px_rgba(139,0,0,0.5)];
+  }
+  
+  .btn-secondary {
+    @apply border border-secondary text-secondary font-bold py-3 px-6 rounded-sm uppercase tracking-wider transition-all duration-200 hover:bg-secondary hover:text-background;
+  }
+
+  .card {
+    @apply bg-surface border border-borderDark rounded-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)];
+  }
+}
