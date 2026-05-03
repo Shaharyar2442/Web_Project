@@ -10,6 +10,7 @@ import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import ExerciseLibrary from './pages/exercises/ExerciseLibrary';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -49,6 +50,7 @@ function App() {
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/exercises" element={<ExerciseLibrary />} />
               {/* More protected routes will go here in future phases */}
             </Route>
           </Routes>

@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 
 import authRoutes from './routes/authRoutes.js';
+import exerciseRoutes from './routes/exerciseRoutes.js';
 
 // Setup environment variables (looking up one directory level to root .env)
 const __filename = fileURLToPath(import.meta.url);
@@ -27,6 +28,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/exercises', exerciseRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
