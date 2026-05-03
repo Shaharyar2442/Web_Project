@@ -128,3 +128,26 @@ export const finishSession = async (req, res) => {
     res.status(500).json({ message: 'Error finishing session' });
   }
 };
+
+export const getHistory = async (req, res) => {
+  try {
+    const sessions = await Session.find({ user: req.user._id, isActive: false })
+      .populate('exercises.exercise')
+      .sort({ endTime: -1 });
+
+    const totalWorkouts = sessions.length;
+    const totalVolume = sessions.reduce((sum, s) => sum + (s.totalVolume || 0), 0);
+    const totalSets = sessions.reduce((sum, s) => sum + (s.setsCompleted || 0), 0);
+
+    res.status(200).json({
+      sessions,
+      stats: {
+        totalWorkouts,
+        totalVolume,
+        totalSets
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching history' });
+  }
+};

@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
-import { Dumbbell, X } from 'lucide-react';
+import { Dumbbell, X, Plus } from 'lucide-react';
 import TimerDisplay from '../../components/session/TimerDisplay';
 import SetRow from '../../components/session/SetRow';
+import AddExerciseToSessionModal from '../../components/session/AddExerciseToSessionModal';
 
 const LiveSession = () => {
   const navigate = useNavigate();
@@ -13,12 +14,15 @@ const LiveSession = () => {
   
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [isAddingExercise, setIsAddingExercise] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [summaryData, setSummaryData] = useState(null);
 
   // Initialize Session
   useEffect(() => {
     const initializeSession = async () => {
       try {
-        // 1. Check for active session first
         const { data: activeSession } = await api.get('/sessions/active');
         if (activeSession) {
           setSession(activeSession);
@@ -26,7 +30,6 @@ const LiveSession = () => {
           return;
         }
 
-        // 2. If no active session, start one (with or without routine)
         const { data: newSession } = await api.post('/sessions/start', { routineId });
         setSession(newSession);
       } catch (error) {
@@ -40,38 +43,94 @@ const LiveSession = () => {
     initializeSession();
   }, [routineId, navigate]);
 
-  // Handle Set Completion
-  const handleCompleteSet = async (exerciseId, setId, isCompleted, reps, weight) => {
-    if (!session) return;
+  const autoSync = async (updatedExercises) => {
+    try {
+      await api.put(`/sessions/${session._id}`, { exercises: updatedExercises });
+    } catch (error) {
+      toast.error('Failed to sync workout');
+    }
+  };
 
-    // Optimistic UI Update
+  const handleCompleteSet = (exerciseId, setId, isCompleted, reps, weight, note) => {
+    if (!session) return;
     const updatedExercises = session.exercises.map(ex => {
       if (ex._id === exerciseId) {
         return {
           ...ex,
-          sets: ex.sets.map(s => {
-            if (s._id === setId || s.id === setId) {
-              return { ...s, isCompleted, reps, weight };
-            }
-            return s;
-          })
+          sets: ex.sets.map(s => (s._id === setId || s.id === setId) ? { ...s, isCompleted, reps, weight, note } : s)
         };
       }
       return ex;
     });
-
     setSession({ ...session, exercises: updatedExercises });
-
-    // Auto-save to backend
-    try {
-      await api.put(`/sessions/${session._id}`, { exercises: updatedExercises });
-    } catch (error) {
-      toast.error('Failed to sync set');
-    }
+    autoSync(updatedExercises);
   };
 
-  const handleFinishWorkout = () => {
-    toast('Finish Workout flow coming in Phase 7!', { icon: '🏗️' });
+  const handleUpdateNote = (exerciseId, setId, note) => {
+    const updatedExercises = session.exercises.map(ex => {
+      if (ex._id === exerciseId) {
+        return {
+          ...ex,
+          sets: ex.sets.map(s => (s._id === setId || s.id === setId) ? { ...s, note } : s)
+        };
+      }
+      return ex;
+    });
+    setSession({ ...session, exercises: updatedExercises });
+    autoSync(updatedExercises);
+  };
+
+  const handleAddSet = (exerciseId) => {
+    const updatedExercises = session.exercises.map(ex => {
+      if (ex._id === exerciseId) {
+        const lastSet = ex.sets[ex.sets.length - 1];
+        return {
+          ...ex,
+          sets: [...ex.sets, {
+            id: Math.random().toString(36).substr(2, 9),
+            reps: lastSet ? lastSet.reps : 10,
+            weight: lastSet ? lastSet.weight : 0,
+            isCompleted: false,
+            note: ''
+          }]
+        };
+      }
+      return ex;
+    });
+    setSession({ ...session, exercises: updatedExercises });
+    autoSync(updatedExercises);
+  };
+
+  const handleAddExerciseMidWorkout = (exercise) => {
+    const newExercise = {
+      _id: Math.random().toString(36).substr(2, 9),
+      exercise,
+      order: session.exercises.length,
+      sets: [{
+        id: Math.random().toString(36).substr(2, 9),
+        reps: 10,
+        weight: 0,
+        isCompleted: false,
+        note: ''
+      }]
+    };
+    const updatedExercises = [...session.exercises, newExercise];
+    setSession({ ...session, exercises: updatedExercises });
+    setIsAddingExercise(false);
+    autoSync(updatedExercises);
+    toast.success('Exercise added!');
+  };
+
+  const handleFinishWorkout = async () => {
+    if (!window.confirm("Are you sure you're ready to finish this workout?")) return;
+    
+    try {
+      const { data } = await api.post(`/sessions/${session._id}/finish`, { exercises: session.exercises });
+      setSummaryData(data);
+      setIsFinished(true);
+    } catch (error) {
+      toast.error('Failed to finish workout');
+    }
   };
 
   if (isLoading) {
@@ -79,6 +138,35 @@ const LiveSession = () => {
       <div className="flex flex-col h-[80vh] items-center justify-center">
         <Dumbbell className="text-primary animate-pulse mb-4" size={48} />
         <h2 className="text-2xl font-bold tracking-widest text-textMuted uppercase animate-pulse">Warming Up</h2>
+      </div>
+    );
+  }
+
+  if (isFinished && summaryData) {
+    return (
+      <div className="max-w-md mx-auto mt-12 px-4 pb-20">
+        <div className="card p-8 text-center shadow-2xl border-primary animate-in fade-in zoom-in duration-500">
+          <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6 text-primary">
+            <Dumbbell size={40} />
+          </div>
+          <h1 className="text-3xl font-bold text-white mb-2 uppercase tracking-widest">Workout Complete</h1>
+          <p className="text-textMuted mb-8 font-bold uppercase">{summaryData.name}</p>
+          
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="bg-surface border border-borderDark p-4 rounded-sm shadow-md">
+              <p className="text-[10px] text-textMuted font-bold uppercase tracking-widest mb-1">Total Volume</p>
+              <p className="text-2xl font-bold text-secondary">{summaryData.totalVolume} kg</p>
+            </div>
+            <div className="bg-surface border border-borderDark p-4 rounded-sm shadow-md">
+              <p className="text-[10px] text-textMuted font-bold uppercase tracking-widest mb-1">Sets Completed</p>
+              <p className="text-2xl font-bold text-secondary">{summaryData.setsCompleted}</p>
+            </div>
+          </div>
+          
+          <button onClick={() => navigate('/dashboard')} className="btn-primary w-full py-4 text-lg shadow-lg">
+            BACK TO HQ
+          </button>
+        </div>
       </div>
     );
   }
@@ -102,7 +190,7 @@ const LiveSession = () => {
           <button 
             onClick={() => {
               if (window.confirm("Are you sure you want to cancel this session? All data will be lost.")) {
-                navigate('/dashboard'); // Hard delete will be added later
+                navigate('/dashboard');
               }
             }}
             className="text-textMuted hover:text-error transition-colors p-2 rounded-sm hover:bg-background"
@@ -116,9 +204,9 @@ const LiveSession = () => {
       {/* Exercises List */}
       <div className="mt-6 space-y-8">
         {session.exercises.length === 0 ? (
-          <div className="text-center py-12 text-textMuted border border-dashed border-borderDark rounded-sm">
+          <div className="text-center py-12 text-textMuted border border-dashed border-borderDark rounded-sm bg-surface">
             <p>No exercises in this session.</p>
-            <p className="text-sm">Adding exercises mid-workout comes in Phase 7!</p>
+            <button onClick={() => setIsAddingExercise(true)} className="btn-secondary mt-4">ADD EXERCISE</button>
           </div>
         ) : (
           session.exercises.map((ex, index) => (
@@ -147,21 +235,31 @@ const LiveSession = () => {
                       key={set._id || set.id} 
                       set={set} 
                       index={setIndex} 
-                      onComplete={(setId, isCompleted, reps, weight) => handleCompleteSet(ex._id, setId, isCompleted, reps, weight)}
+                      onComplete={(setId, isCompleted, reps, weight, note) => handleCompleteSet(ex._id, setId, isCompleted, reps, weight, note)}
+                      onUpdateNote={(setId, note) => handleUpdateNote(ex._id, setId, note)}
                     />
                   ))}
                 </div>
 
-                {/* Add Set Button placeholder for Phase 7 */}
                 <button 
-                  className="mt-4 w-full py-2 border border-dashed border-borderDark text-textMuted hover:border-primary hover:text-primary transition-colors rounded-sm text-sm font-bold uppercase tracking-widest"
-                  onClick={() => toast('Adding sets mid-workout coming in Phase 7', { icon: '🏗️' })}
+                  className="mt-4 w-full py-2 border border-dashed border-borderDark text-textMuted hover:border-primary hover:text-primary transition-colors rounded-sm text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 bg-surface"
+                  onClick={() => handleAddSet(ex._id)}
                 >
-                  + Add Set
+                  <Plus size={16} /> Add Set
                 </button>
               </div>
             </div>
           ))
+        )}
+
+        {/* Add Exercise Mid-Workout */}
+        {session.exercises.length > 0 && (
+          <button 
+            onClick={() => setIsAddingExercise(true)}
+            className="w-full py-4 border-2 border-dashed border-borderDark text-textMuted hover:border-secondary hover:text-secondary transition-colors rounded-sm text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 bg-surface shadow-md"
+          >
+            <Plus size={18} /> ADD EXERCISE
+          </button>
         )}
       </div>
 
@@ -179,6 +277,11 @@ const LiveSession = () => {
         </button>
       </div>
 
+      <AddExerciseToSessionModal 
+        isOpen={isAddingExercise} 
+        onClose={() => setIsAddingExercise(false)} 
+        onAdd={handleAddExerciseMidWorkout} 
+      />
     </div>
   );
 };
