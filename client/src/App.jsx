@@ -11,6 +11,8 @@ import Signup from './pages/auth/Signup';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import ExerciseLibrary from './pages/exercises/ExerciseLibrary';
+import RoutineList from './pages/routines/RoutineList';
+import RoutineBuilder from './pages/routines/RoutineBuilder';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -51,6 +53,9 @@ function App() {
             <Route element={<ProtectedRoute />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/exercises" element={<ExerciseLibrary />} />
+              <Route path="/routines" element={<RoutineList />} />
+              <Route path="/routines/create" element={<RoutineBuilder />} />
+              <Route path="/routines/edit/:id" element={<RoutineBuilder />} />
               {/* More protected routes will go here in future phases */}
             </Route>
           </Routes>
