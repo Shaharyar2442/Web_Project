@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const setSchema = new mongoose.Schema({
   reps: { type: Number, default: 10, min: 1 },
   weight: { type: Number, default: 0 },
-  restTimerSeconds: { type: Number, default: 90, min: 0 }
+  restTimerSeconds: { type: Number, default: 90, min: 0 },
+  note: { type: String, default: '' }
 });
 
 const routineExerciseSchema = new mongoose.Schema({

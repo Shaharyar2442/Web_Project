@@ -3,7 +3,8 @@ import mongoose from 'mongoose';
 const sessionSetSchema = new mongoose.Schema({
   reps: { type: Number, default: 0 },
   weight: { type: Number, default: 0 },
-  isCompleted: { type: Boolean, default: false }
+  isCompleted: { type: Boolean, default: false },
+  note: { type: String, default: '' }
 });
 
 const sessionExerciseSchema = new mongoose.Schema({
@@ -19,7 +20,9 @@ const sessionSchema = new mongoose.Schema({
   startTime: { type: Date, default: Date.now },
   endTime: { type: Date, default: null },
   isActive: { type: Boolean, default: true },
-  exercises: [sessionExerciseSchema]
+  exercises: [sessionExerciseSchema],
+  totalVolume: { type: Number, default: 0 },
+  setsCompleted: { type: Number, default: 0 }
 }, { timestamps: true });
 
 export default mongoose.model('Session', sessionSchema);
