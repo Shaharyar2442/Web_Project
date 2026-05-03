@@ -90,7 +90,8 @@ const RoutineBuilder = () => {
         id: Math.random().toString(36).substr(2, 9),
         reps: 10,
         weight: 0,
-        restTimerSeconds: 90
+        restTimerSeconds: 90,
+        note: ''
       }]
     };
     setSelectedExercises([...selectedExercises, newItem]);
@@ -112,7 +113,8 @@ const RoutineBuilder = () => {
             id: Math.random().toString(36).substr(2, 9),
             reps: lastSet ? lastSet.reps : 10,
             weight: lastSet ? lastSet.weight : 0,
-            restTimerSeconds: lastSet ? lastSet.restTimerSeconds : 90
+            restTimerSeconds: lastSet ? lastSet.restTimerSeconds : 90,
+            note: ''
           }]
         };
       }
