@@ -9,6 +9,7 @@ import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import exerciseRoutes from './routes/exerciseRoutes.js';
 import routineRoutes from './routes/routineRoutes.js';
+import sessionRoutes from './routes/sessionRoutes.js';
 
 // Setup environment variables (looking up one directory level to root .env)
 const __filename = fileURLToPath(import.meta.url);
@@ -31,6 +32,7 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/routines', routineRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

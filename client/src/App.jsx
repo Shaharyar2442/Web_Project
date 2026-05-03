@@ -13,6 +13,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 import ExerciseLibrary from './pages/exercises/ExerciseLibrary';
 import RoutineList from './pages/routines/RoutineList';
 import RoutineBuilder from './pages/routines/RoutineBuilder';
+import LiveSession from './pages/session/LiveSession';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -56,6 +57,7 @@ function App() {
               <Route path="/routines" element={<RoutineList />} />
               <Route path="/routines/create" element={<RoutineBuilder />} />
               <Route path="/routines/edit/:id" element={<RoutineBuilder />} />
+              <Route path="/session/start" element={<LiveSession />} />
               {/* More protected routes will go here in future phases */}
             </Route>
           </Routes>
