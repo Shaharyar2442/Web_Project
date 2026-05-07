@@ -8,9 +8,11 @@ import HistoryRow from '../../components/dashboard/HistoryRow';
 import ActivityHeatmap from '../../components/dashboard/ActivityHeatmap';
 import MuscleDistribution from '../../components/dashboard/MuscleDistribution';
 import { useAuth } from '../../context/AuthContext';
+import { useUnit } from '../../hooks/useUnit';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { displayWeight } = useUnit();
   const navigate = useNavigate();
   const [data, setData] = useState({ sessions: [], stats: { totalWorkouts: 0, totalVolume: 0, totalSets: 0 } });
   const [isLoading, setIsLoading] = useState(true);
@@ -53,9 +55,10 @@ const Dashboard = () => {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-        <StatCard title="Workouts Completed" value={data.stats.totalWorkouts} icon={Activity} />
-        <StatCard title="Total Volume (kg)" value={data.stats.totalVolume.toLocaleString()} icon={Dumbbell} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+        <StatCard title="Total Workouts" value={data.stats.totalWorkouts.toLocaleString()} icon={Activity} />
+        <StatCard title="Weekly Goal" value={`${data.stats.weeklySessions || 0} / ${user?.weeklyGoal || 3}`} icon={Play} />
+        <StatCard title="Total Volume" value={displayWeight(data.stats.totalVolume)} icon={Dumbbell} />
         <StatCard title="Sets Completed" value={data.stats.totalSets.toLocaleString()} icon={Layers} />
       </div>
 

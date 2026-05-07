@@ -13,6 +13,7 @@ import routineRoutes from './routes/routineRoutes.js';
 import sessionRoutes from './routes/sessionRoutes.js';
 import progressRoutes from './routes/progressRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // Setup environment variables (looking up one directory level to root .env)
 const __filename = fileURLToPath(import.meta.url);
@@ -24,11 +25,11 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'],
   credentials: true
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 app.use(morgan('dev'));
 
@@ -39,6 +40,7 @@ app.use('/api/routines', routineRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/users', userRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {

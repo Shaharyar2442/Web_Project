@@ -6,6 +6,7 @@ import { Dumbbell, X, Plus } from 'lucide-react';
 import TimerDisplay from '../../components/session/TimerDisplay';
 import SetRow from '../../components/session/SetRow';
 import AddExerciseToSessionModal from '../../components/session/AddExerciseToSessionModal';
+import { useUnit } from '../../hooks/useUnit';
 
 const generateObjectId = () => {
   const timestamp = Math.floor(Date.now() / 1000).toString(16);
@@ -15,6 +16,7 @@ const generateObjectId = () => {
 
 const LiveSession = () => {
   const navigate = useNavigate();
+  const { displayWeight, unitPreference } = useUnit();
   const [searchParams] = useSearchParams();
   const routineId = searchParams.get('routine');
   
@@ -196,7 +198,7 @@ const LiveSession = () => {
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-surface border border-borderDark p-4 rounded-sm shadow-md">
               <p className="text-[10px] text-textMuted font-bold uppercase tracking-widest mb-1">Total Volume</p>
-              <p className="text-2xl font-bold text-secondary">{summaryData.totalVolume} kg</p>
+              <p className="text-2xl font-bold text-secondary">{displayWeight(summaryData.totalVolume)}</p>
             </div>
             <div className="bg-surface border border-borderDark p-4 rounded-sm shadow-md">
               <p className="text-[10px] text-textMuted font-bold uppercase tracking-widest mb-1">Sets Completed</p>
@@ -268,7 +270,7 @@ const LiveSession = () => {
                   <div className="flex flex-wrap gap-x-4 gap-y-1">
                     {lastTime.sets.map((s, i) => (
                       <span key={i} className="font-bold text-textMuted">
-                        Set {i+1}: <span className="text-white">{s.weight}kg &times; {s.reps}</span>
+                        Set {i+1}: <span className="text-white">{displayWeight(s.weight, false)}{unitPreference} &times; {s.reps}</span>
                       </span>
                     ))}
                   </div>
@@ -280,7 +282,7 @@ const LiveSession = () => {
                 <div className="grid grid-cols-5 gap-2 mb-2 px-2">
                   <div className="text-center text-[10px] font-bold text-textMuted uppercase tracking-wider">Set</div>
                   <div className="text-center text-[10px] font-bold text-textMuted uppercase tracking-wider">Prev</div>
-                  <div className="text-center text-[10px] font-bold text-textMuted uppercase tracking-wider">kg</div>
+                  <div className="text-center text-[10px] font-bold text-textMuted uppercase tracking-wider">{unitPreference}</div>
                   <div className="text-center text-[10px] font-bold text-textMuted uppercase tracking-wider">Reps</div>
                   <div className="text-center text-[10px] font-bold text-textMuted uppercase tracking-wider">Done</div>
                 </div>
@@ -303,7 +305,7 @@ const LiveSession = () => {
                     <div key={`ghost-${gIndex}`} className="grid grid-cols-5 gap-2 items-center px-2 py-3 border-b border-borderDark/20 opacity-30 grayscale pointer-events-none">
                       <div className="text-center font-bold text-textMuted">{ex.sets.length + gIndex + 1}</div>
                       <div className="text-center text-xs font-bold text-textMuted">-</div>
-                      <div className="text-center font-bold text-textMuted">{gSet.weight}</div>
+                      <div className="text-center font-bold text-textMuted">{displayWeight(gSet.weight, false)}</div>
                       <div className="text-center font-bold text-textMuted">{gSet.reps}</div>
                       <div className="flex justify-center">-</div>
                     </div>

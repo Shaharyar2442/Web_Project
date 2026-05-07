@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { Plus } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { motion } from 'framer-motion';
 import RoutineCard from '../../components/routines/RoutineCard';
 
 const RoutineList = () => {
@@ -48,10 +49,17 @@ const RoutineList = () => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <motion.div 
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ staggerChildren: 0.1 }}
+      >
         {routines.length > 0 ? (
           routines.map(routine => (
-            <RoutineCard key={routine._id} routine={routine} onDelete={handleDelete} />
+            <motion.div key={routine._id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <RoutineCard routine={routine} onDelete={handleDelete} />
+            </motion.div>
           ))
         ) : (
           <div className="col-span-full py-16 text-center text-textMuted border border-dashed border-borderDark rounded-sm">
@@ -60,7 +68,7 @@ const RoutineList = () => {
             <Link to="/routines/create" className="btn-secondary mt-4 inline-block">BUILD NOW</Link>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

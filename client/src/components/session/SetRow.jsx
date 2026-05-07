@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, MessageSquare } from 'lucide-react';
+import { useUnit } from '../../hooks/useUnit';
 
 const SetRow = ({ set, index, onComplete, onUpdateNote, ghostData }) => {
+  const { displayWeight, convertToKg, unitPreference } = useUnit();
+  
   const [reps, setReps] = useState(set.reps);
-  const [weight, setWeight] = useState(set.weight);
+  // Initialize state with converted display value
+  const [weight, setWeight] = useState(set.weight ? displayWeight(set.weight, false) : 0);
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState(set.note || '');
 
@@ -12,15 +16,17 @@ const SetRow = ({ set, index, onComplete, onUpdateNote, ghostData }) => {
   const isGhostingReps = reps === 0 && ghostData;
 
   const handleComplete = () => {
-    const finalWeight = isGhostingWeight && !set.isCompleted ? ghostData.weight : weight;
+    // If ghosting, use the raw ghost kg weight. If manual, convert the input display weight back to kg.
+    const finalWeightKg = isGhostingWeight && !set.isCompleted ? ghostData.weight : convertToKg(weight);
     const finalReps = isGhostingReps && !set.isCompleted ? ghostData.reps : reps;
     
     if (!set.isCompleted) {
-      setWeight(finalWeight);
+      // Set the local state to the display version of the weight we are about to save
+      setWeight(displayWeight(finalWeightKg, false));
       setReps(finalReps);
     }
     
-    onComplete(set._id || set.id, !set.isCompleted, finalReps, finalWeight, note);
+    onComplete(set._id || set.id, !set.isCompleted, finalReps, finalWeightKg, note);
   };
 
   const handleNoteChange = (e) => {
@@ -49,7 +55,7 @@ const SetRow = ({ set, index, onComplete, onUpdateNote, ghostData }) => {
 
         {/* Previous */}
         <div className="text-center text-textMuted text-[10px] sm:text-xs font-bold uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
-          {ghostData ? `${ghostData.weight}kg × ${ghostData.reps}` : '-'}
+          {ghostData ? `${displayWeight(ghostData.weight, false)}${unitPreference} × ${ghostData.reps}` : '-'}
         </div>
 
         {/* Weight Input */}
@@ -57,7 +63,7 @@ const SetRow = ({ set, index, onComplete, onUpdateNote, ghostData }) => {
           <input 
             type="number" 
             value={isGhostingWeight ? '' : weight}
-            placeholder={isGhostingWeight ? ghostData.weight : ''}
+            placeholder={isGhostingWeight ? displayWeight(ghostData.weight, false) : ''}
             onChange={(e) => setWeight(Number(e.target.value))}
             disabled={set.isCompleted}
             className={`w-full rounded-sm p-2 text-center font-bold outline-none transition-colors ${set.isCompleted ? 'text-primary opacity-80 border-transparent bg-transparent' : (isGhostingWeight ? 'bg-[rgba(184,134,11,0.15)] border-transparent border-l-[3px] border-l-[#b8860b] text-[#b8860b] placeholder-[#b8860b]/50' : 'bg-surface border border-borderDark focus:border-primary text-textLight')}`}

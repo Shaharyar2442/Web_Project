@@ -3,9 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import api from '../../api/axios';
 import { format } from 'date-fns';
 import { ArrowLeft, Clock, Dumbbell, Award, Layers } from 'lucide-react';
+import { useUnit } from '../../hooks/useUnit';
 
 const SessionDetail = () => {
   const { id } = useParams();
+  const { displayWeight, unitPreference } = useUnit();
   const [session, setSession] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -73,7 +75,7 @@ const SessionDetail = () => {
           </div>
           <div>
             <p className="text-xs text-textMuted font-bold uppercase tracking-widest mb-1 flex items-center gap-2"><Dumbbell size={12}/> Volume</p>
-            <p className="text-xl text-white font-bold">{session.totalVolume?.toLocaleString()} <span className="text-sm text-textMuted">kg</span></p>
+            <p className="text-xl text-white font-bold">{displayWeight(session.totalVolume)}</p>
           </div>
           <div>
             <p className="text-xs text-textMuted font-bold uppercase tracking-widest mb-1 flex items-center gap-2"><Layers size={12}/> Sets</p>
@@ -104,7 +106,7 @@ const SessionDetail = () => {
                     <thead>
                       <tr className="text-xs text-textMuted font-bold uppercase tracking-widest border-b border-borderDark">
                         <th className="pb-3 px-2 w-16">Set</th>
-                        <th className="pb-3 px-2">Weight</th>
+                        <th className="pb-3 px-2">Weight ({unitPreference})</th>
                         <th className="pb-3 px-2">Reps</th>
                         <th className="pb-3 px-2">Notes</th>
                       </tr>
@@ -114,7 +116,7 @@ const SessionDetail = () => {
                         <tr key={set._id} className={`border-b border-borderDark/30 hover:bg-surface/30 transition-colors ${set.isPR ? 'bg-primary/5' : ''}`}>
                           <td className="py-4 px-2 font-bold text-textMuted">{setIdx + 1}</td>
                           <td className="py-4 px-2">
-                            <span className="text-lg font-bold text-white">{set.weight}</span> <span className="text-xs text-textMuted">kg</span>
+                            <span className="text-lg font-bold text-white">{displayWeight(set.weight, false)}</span>
                           </td>
                           <td className="py-4 px-2">
                             <span className="text-lg font-bold text-white">{set.reps}</span>
