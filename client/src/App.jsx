@@ -17,6 +17,7 @@ import LiveSession from './pages/session/LiveSession';
 import Dashboard from './pages/dashboard/Dashboard';
 import SessionDetail from './pages/dashboard/SessionDetail';
 import ProgressDashboard from './pages/progress/ProgressDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -56,7 +57,11 @@ function App() {
               <Route path="/session/start" element={<LiveSession />} />
               <Route path="/history/:id" element={<SessionDetail />} />
               <Route path="/progress" element={<ProgressDashboard />} />
-              {/* More protected routes will go here in future phases */}
+            </Route>
+
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute adminOnly={true} />}>
+              <Route path="/admin" element={<AdminDashboard />} />
             </Route>
           </Routes>
         </Layout>

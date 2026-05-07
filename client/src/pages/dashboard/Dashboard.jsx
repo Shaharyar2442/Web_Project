@@ -5,6 +5,8 @@ import { toast } from 'react-hot-toast';
 import { Activity, Dumbbell, Layers, Play } from 'lucide-react';
 import StatCard from '../../components/dashboard/StatCard';
 import HistoryRow from '../../components/dashboard/HistoryRow';
+import ActivityHeatmap from '../../components/dashboard/ActivityHeatmap';
+import MuscleDistribution from '../../components/dashboard/MuscleDistribution';
 import { useAuth } from '../../context/AuthContext';
 
 const Dashboard = () => {
@@ -56,6 +58,25 @@ const Dashboard = () => {
         <StatCard title="Total Volume (kg)" value={data.stats.totalVolume.toLocaleString()} icon={Dumbbell} />
         <StatCard title="Sets Completed" value={data.stats.totalSets.toLocaleString()} icon={Layers} />
       </div>
+
+      {/* Analytics Overview */}
+      {data.sessions.length > 0 && (
+        <div className="mb-12">
+          <div className="flex justify-between items-center mb-6 border-b border-borderDark pb-2">
+            <h2 className="text-2xl font-bold text-white uppercase tracking-widest flex items-center gap-2">Analytics Overview</h2>
+            <span className="text-xs font-bold text-textMuted uppercase bg-surface px-2 py-1 rounded-sm">Data</span>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <ActivityHeatmap data={data.stats.heatmapData} />
+            </div>
+            <div>
+              <MuscleDistribution data={data.stats.muscleData} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* History Feed */}
       <div>
