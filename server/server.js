@@ -11,6 +11,7 @@ import authRoutes from './routes/authRoutes.js';
 import exerciseRoutes from './routes/exerciseRoutes.js';
 import routineRoutes from './routes/routineRoutes.js';
 import sessionRoutes from './routes/sessionRoutes.js';
+import progressRoutes from './routes/progressRoutes.js';
 
 // Setup environment variables (looking up one directory level to root .env)
 const __filename = fileURLToPath(import.meta.url);
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/exercises', exerciseRoutes);
 app.use('/api/routines', routineRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/progress', progressRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
