@@ -6,12 +6,21 @@ const RoutineCard = ({ routine, onDelete }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="card p-6 flex flex-col h-full hover:border-primary transition-colors group relative shadow-md">
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-2xl text-primary font-bold uppercase truncate pr-8">{routine.name}</h3>
+    <div className="card flex flex-col h-full hover:border-primary transition-colors group relative shadow-md overflow-hidden p-0">
+      {/* Banner */}
+      <div 
+        className="h-24 w-full bg-cover bg-center border-b border-borderDark opacity-80 group-hover:opacity-100 transition-opacity"
+        style={{ backgroundImage: 'url(/routine-thumb.png)' }}
+      >
+        <div className="w-full h-full bg-gradient-to-t from-surface to-transparent"></div>
       </div>
-      
-      {routine.notes && (
+
+      <div className="p-6 pt-4 flex flex-col flex-grow">
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="text-2xl text-primary font-bold uppercase truncate pr-8">{routine.name}</h3>
+        </div>
+        
+        {routine.notes && (
         <p className="text-sm text-textMuted mb-4 italic line-clamp-2">{routine.notes}</p>
       )}
 
@@ -48,7 +57,8 @@ const RoutineCard = ({ routine, onDelete }) => {
           <Play size={16} fill="currentColor" /> START
         </button>
       </div>
-    </div>
+        </div>
+      </div>
   );
 };
 

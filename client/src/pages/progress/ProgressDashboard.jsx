@@ -4,8 +4,10 @@ import { toast } from 'react-hot-toast';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { TrendingUp, Award, Calendar } from 'lucide-react';
+import { useUnit } from '../../hooks/useUnit';
 
 const ProgressDashboard = () => {
+  const { displayWeight, unitPreference } = useUnit();
   const [prs, setPrs] = useState([]);
   const [selectedExercise, setSelectedExercise] = useState(null);
   const [chartData, setChartData] = useState([]);
@@ -57,7 +59,7 @@ const ProgressDashboard = () => {
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }} className="text-sm font-bold uppercase tracking-wider flex justify-between gap-4">
               <span>{entry.name}:</span>
-              <span>{entry.value} {entry.name === 'Total Volume' ? 'kg' : 'kg'}</span>
+              <span>{displayWeight(entry.value)}</span>
             </p>
           ))}
         </div>
@@ -102,12 +104,12 @@ const ProgressDashboard = () => {
                 <h3 className="text-lg font-bold text-white uppercase truncate group-hover:text-primary transition-colors">{pr.exerciseName}</h3>
                 <div className="mt-4 flex justify-between items-end">
                   <div>
-                    <p className="text-2xl font-bold text-secondary leading-none mb-1">{pr.weight} <span className="text-sm text-textMuted">kg</span></p>
+                    <p className="text-2xl font-bold text-secondary leading-none mb-1">{displayWeight(pr.weight, false)} <span className="text-sm text-textMuted">{unitPreference}</span></p>
                     <p className="text-[10px] font-bold text-textMuted uppercase tracking-wider">x {pr.reps} reps</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] font-bold text-textMuted uppercase tracking-widest mb-1">Est 1RM</p>
-                    <p className="text-xl font-bold text-white leading-none">{Math.round(pr.estimatedOneRM * 10) / 10} <span className="text-xs text-textMuted">kg</span></p>
+                    <p className="text-xl font-bold text-white leading-none">{displayWeight(Math.round(pr.estimatedOneRM * 10) / 10, false)} <span className="text-xs text-textMuted">{unitPreference}</span></p>
                   </div>
                 </div>
                 <div className="mt-5 flex items-center gap-2 text-[9px] font-bold text-textLight uppercase tracking-widest bg-background border border-borderDark px-2 py-1.5 rounded-sm w-fit">

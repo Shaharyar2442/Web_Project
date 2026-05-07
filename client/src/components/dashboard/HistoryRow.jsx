@@ -2,8 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Dumbbell, Calendar, Clock } from 'lucide-react';
+import { useUnit } from '../../hooks/useUnit';
 
 const HistoryRow = ({ session }) => {
+  const { displayWeight } = useUnit();
   const durationMs = new Date(session.endTime).getTime() - new Date(session.startTime).getTime();
   const durationMins = Math.floor(durationMs / 60000);
 
@@ -24,7 +26,7 @@ const HistoryRow = ({ session }) => {
         </div>
         <div className="flex items-center gap-2">
           <Dumbbell size={16} className="text-secondary" />
-          {session.totalVolume?.toLocaleString() || 0} kg
+          {displayWeight(session.totalVolume || 0)}
         </div>
         <div className="flex items-center gap-2 bg-background px-2 py-1 rounded-sm border border-borderDark">
           {session.setsCompleted || 0} Sets

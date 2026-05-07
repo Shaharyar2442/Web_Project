@@ -18,17 +18,9 @@ import Dashboard from './pages/dashboard/Dashboard';
 import SessionDetail from './pages/dashboard/SessionDetail';
 import ProgressDashboard from './pages/progress/ProgressDashboard';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import Profile from './pages/profile/Profile';
 
-const Home = () => (
-  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
-    <h1 className="text-6xl md:text-8xl text-primary mb-6 drop-shadow-[0_0_10px_rgba(139,0,0,0.3)]">
-      LOG IT. LIFT IT. BREAK IT.
-    </h1>
-    <p className="text-xl text-textMuted max-w-2xl">
-      Phase 3: Authentication Frontend integrated.
-    </p>
-  </div>
-);
+import LandingPage from './pages/LandingPage';
 
 function App() {
   return (
@@ -41,7 +33,7 @@ function App() {
             error: { iconTheme: { primary: '#e74c3c', secondary: '#e8e8e8' } }
           }} />
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -57,6 +49,7 @@ function App() {
               <Route path="/session/start" element={<LiveSession />} />
               <Route path="/history/:id" element={<SessionDetail />} />
               <Route path="/progress" element={<ProgressDashboard />} />
+              <Route path="/profile" element={<Profile />} />
             </Route>
 
             {/* Admin Routes */}

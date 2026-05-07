@@ -1,16 +1,18 @@
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { useUnit } from '../../hooks/useUnit';
 
 const COLORS = ['#e74c3c', '#f1c40f', '#3498db', '#9b59b6', '#2ecc71', '#e67e22', '#1abc9c', '#34495e'];
 
 const CustomTooltip = ({ active, payload }) => {
+  const { displayWeight } = useUnit();
   if (active && payload && payload.length) {
     return (
       <div className="bg-surface border border-borderDark p-3 rounded-sm shadow-xl z-50">
         <p className="text-white font-bold mb-2 uppercase tracking-widest text-xs border-b border-borderDark pb-1">{payload[0].name}</p>
         <p className="text-sm font-bold flex justify-between gap-4" style={{ color: payload[0].payload.fill }}>
           <span>Volume:</span>
-          <span>{payload[0].value.toLocaleString()} kg</span>
+          <span>{displayWeight(payload[0].value)}</span>
         </p>
       </div>
     );
@@ -19,6 +21,8 @@ const CustomTooltip = ({ active, payload }) => {
 };
 
 const MuscleDistribution = ({ data }) => {
+  const { displayWeight } = useUnit();
+
   if (!data || data.length === 0) {
     return (
       <div className="card h-full flex flex-col p-6 shadow-xl border border-borderDark bg-surface/50">
@@ -67,8 +71,10 @@ const MuscleDistribution = ({ data }) => {
         
         {/* Center Text overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[10px] font-bold text-textMuted uppercase tracking-widest mb-1">Total Vol</span>
-          <span className="text-2xl font-bold text-white leading-none">{totalVolume >= 1000 ? (totalVolume/1000).toFixed(1) + 'k' : totalVolume}</span>
+          <div className="text-center">
+            <p className="text-[10px] text-textMuted font-bold uppercase tracking-widest">Total Volume</p>
+            <p className="text-2xl font-bold text-white leading-none">{displayWeight(totalVolume)}</p>
+          </div>
         </div>
       </div>
 
