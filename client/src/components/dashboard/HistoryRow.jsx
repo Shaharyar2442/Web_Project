@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Dumbbell, Calendar, Clock } from 'lucide-react';
 
@@ -7,7 +8,7 @@ const HistoryRow = ({ session }) => {
   const durationMins = Math.floor(durationMs / 60000);
 
   return (
-    <div className="bg-surface border border-borderDark rounded-sm p-4 hover:border-primary transition-colors cursor-default shadow-md group">
+    <Link to={`/history/${session._id}`} className="block bg-surface border border-borderDark rounded-sm p-4 hover:border-primary transition-colors cursor-pointer shadow-md group">
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-xl font-bold text-primary uppercase group-hover:text-secondary transition-colors">{session.name}</h3>
         <span className="text-xs font-bold text-textMuted bg-background px-2 py-1 rounded-sm uppercase tracking-wider flex items-center gap-2">
@@ -49,7 +50,7 @@ const HistoryRow = ({ session }) => {
           )}
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 

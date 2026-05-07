@@ -73,7 +73,7 @@ const Dashboard = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {data.sessions.map((session) => (
+            {data.sessions.slice(0, 5).map((session) => (
               <HistoryRow key={session._id} session={session} />
             ))}
           </div>

@@ -4,11 +4,13 @@ const sessionSetSchema = new mongoose.Schema({
   reps: { type: Number, default: 0 },
   weight: { type: Number, default: 0 },
   isCompleted: { type: Boolean, default: false },
-  note: { type: String, default: '' }
+  note: { type: String, default: '' },
+  isPR: { type: Boolean, default: false }
 });
 
 const sessionExerciseSchema = new mongoose.Schema({
   exercise: { type: mongoose.Schema.Types.ObjectId, ref: 'Exercise', required: true },
+  exerciseName: { type: String, default: 'Unknown Exercise' },
   sets: [sessionSetSchema],
   order: { type: Number, required: true }
 });

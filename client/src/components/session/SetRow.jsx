@@ -2,14 +2,25 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, MessageSquare } from 'lucide-react';
 
-const SetRow = ({ set, index, onComplete, onUpdateNote }) => {
+const SetRow = ({ set, index, onComplete, onUpdateNote, ghostData }) => {
   const [reps, setReps] = useState(set.reps);
   const [weight, setWeight] = useState(set.weight);
   const [showNote, setShowNote] = useState(false);
   const [note, setNote] = useState(set.note || '');
 
+  const isGhostingWeight = weight === 0 && ghostData;
+  const isGhostingReps = reps === 0 && ghostData;
+
   const handleComplete = () => {
-    onComplete(set._id || set.id, !set.isCompleted, reps, weight, note);
+    const finalWeight = isGhostingWeight && !set.isCompleted ? ghostData.weight : weight;
+    const finalReps = isGhostingReps && !set.isCompleted ? ghostData.reps : reps;
+    
+    if (!set.isCompleted) {
+      setWeight(finalWeight);
+      setReps(finalReps);
+    }
+    
+    onComplete(set._id || set.id, !set.isCompleted, finalReps, finalWeight, note);
   };
 
   const handleNoteChange = (e) => {
@@ -37,18 +48,19 @@ const SetRow = ({ set, index, onComplete, onUpdateNote }) => {
         </div>
 
         {/* Previous */}
-        <div className="text-center text-textMuted text-xs italic font-mono">
-          -
+        <div className="text-center text-textMuted text-[10px] sm:text-xs font-bold uppercase tracking-widest whitespace-nowrap overflow-hidden text-ellipsis">
+          {ghostData ? `${ghostData.weight}kg × ${ghostData.reps}` : '-'}
         </div>
 
         {/* Weight Input */}
         <div className="text-center">
           <input 
             type="number" 
-            value={weight}
+            value={isGhostingWeight ? '' : weight}
+            placeholder={isGhostingWeight ? ghostData.weight : ''}
             onChange={(e) => setWeight(Number(e.target.value))}
             disabled={set.isCompleted}
-            className={`w-full bg-surface border border-borderDark rounded-sm p-2 text-center font-bold outline-none transition-colors ${set.isCompleted ? 'text-primary opacity-80 border-transparent bg-transparent' : 'text-textLight focus:border-primary'}`}
+            className={`w-full rounded-sm p-2 text-center font-bold outline-none transition-colors ${set.isCompleted ? 'text-primary opacity-80 border-transparent bg-transparent' : (isGhostingWeight ? 'bg-[rgba(184,134,11,0.15)] border-transparent border-l-[3px] border-l-[#b8860b] text-[#b8860b] placeholder-[#b8860b]/50' : 'bg-surface border border-borderDark focus:border-primary text-textLight')}`}
           />
         </div>
 
@@ -56,10 +68,11 @@ const SetRow = ({ set, index, onComplete, onUpdateNote }) => {
         <div className="text-center">
           <input 
             type="number" 
-            value={reps}
+            value={isGhostingReps ? '' : reps}
+            placeholder={isGhostingReps ? ghostData.reps : ''}
             onChange={(e) => setReps(Number(e.target.value))}
             disabled={set.isCompleted}
-            className={`w-full bg-surface border border-borderDark rounded-sm p-2 text-center font-bold outline-none transition-colors ${set.isCompleted ? 'text-primary opacity-80 border-transparent bg-transparent' : 'text-textLight focus:border-primary'}`}
+            className={`w-full rounded-sm p-2 text-center font-bold outline-none transition-colors ${set.isCompleted ? 'text-primary opacity-80 border-transparent bg-transparent' : (isGhostingReps ? 'bg-[rgba(184,134,11,0.15)] border-transparent border-l-[3px] border-l-[#b8860b] text-[#b8860b] placeholder-[#b8860b]/50' : 'bg-surface border border-borderDark focus:border-primary text-textLight')}`}
           />
         </div>
 

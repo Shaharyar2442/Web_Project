@@ -25,6 +25,9 @@ const LiveSession = () => {
   const [isFinished, setIsFinished] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
   
+  const [ghostSession, setGhostSession] = useState(null);
+  const [lastTimeMap, setLastTimeMap] = useState({});
+  
   const initialized = useRef(false);
 
   // Initialize Session
@@ -53,6 +56,22 @@ const LiveSession = () => {
 
     initializeSession();
   }, [routineId, navigate]);
+
+  useEffect(() => {
+    if (session) {
+      const fetchPreviousData = async () => {
+        try {
+          const rId = session.routine || routineId;
+          const { data } = await api.get(`/sessions/previous-data?routineId=${rId}`);
+          setGhostSession(data.previousRoutineSession);
+          setLastTimeMap(data.lastTimeMap);
+        } catch (error) {
+          console.error('Failed to fetch previous data:', error);
+        }
+      };
+      fetchPreviousData();
+    }
+  }, [session?._id, routineId]);
 
   const autoSync = async (updatedExercises) => {
     try {
@@ -227,15 +246,35 @@ const LiveSession = () => {
             <button onClick={() => setIsAddingExercise(true)} className="btn-secondary mt-4">ADD EXERCISE</button>
           </div>
         ) : (
-          session.exercises.map((ex, index) => (
+          session.exercises.map((ex, index) => {
+            const exerciseId = ex.exercise._id || ex.exercise;
+            const ghostSets = ghostSession?.exercises.find(e => (e.exercise._id || e.exercise) === exerciseId)?.sets || [];
+            const lastTime = lastTimeMap[exerciseId];
+
+            return (
             <div key={ex._id} className="card overflow-hidden shadow-lg border-t-2 border-t-transparent hover:border-t-primary transition-all">
               <div className="bg-surface border-b border-borderDark p-4 flex justify-between items-center">
                 <h2 className="text-xl font-bold text-primary uppercase">
                   <span className="text-textMuted mr-2">{index + 1}.</span>
-                  {ex.exercise?.name || 'Unknown Exercise'}
+                  {ex.exercise?.name || ex.exerciseName || 'Unknown Exercise'}
                 </h2>
               </div>
               
+              {lastTime && (
+                <div className="px-4 py-3 bg-surface/30 border-b border-borderDark text-xs">
+                  <p className="font-bold uppercase tracking-widest text-textMuted mb-2">
+                    LAST TIME — {new Date(lastTime.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric'})} — <span className="text-secondary">{lastTime.sessionName}</span>
+                  </p>
+                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                    {lastTime.sets.map((s, i) => (
+                      <span key={i} className="font-bold text-textMuted">
+                        Set {i+1}: <span className="text-white">{s.weight}kg &times; {s.reps}</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="p-4 bg-background">
                 {/* Table Headers */}
                 <div className="grid grid-cols-5 gap-2 mb-2 px-2">
@@ -253,9 +292,21 @@ const LiveSession = () => {
                       key={set._id || set.id} 
                       set={set} 
                       index={setIndex} 
+                      ghostData={ghostSets[setIndex]}
                       onComplete={(setId, isCompleted, reps, weight, note) => handleCompleteSet(ex._id, setId, isCompleted, reps, weight, note)}
                       onUpdateNote={(setId, note) => handleUpdateNote(ex._id, setId, note)}
                     />
+                  ))}
+
+                  {/* Faded Ghost Rows for extra sets from last time */}
+                  {ghostSets.slice(ex.sets.length).map((gSet, gIndex) => (
+                    <div key={`ghost-${gIndex}`} className="grid grid-cols-5 gap-2 items-center px-2 py-3 border-b border-borderDark/20 opacity-30 grayscale pointer-events-none">
+                      <div className="text-center font-bold text-textMuted">{ex.sets.length + gIndex + 1}</div>
+                      <div className="text-center text-xs font-bold text-textMuted">-</div>
+                      <div className="text-center font-bold text-textMuted">{gSet.weight}</div>
+                      <div className="text-center font-bold text-textMuted">{gSet.reps}</div>
+                      <div className="flex justify-center">-</div>
+                    </div>
                   ))}
                 </div>
 
@@ -267,7 +318,8 @@ const LiveSession = () => {
                 </button>
               </div>
             </div>
-          ))
+            );
+          })
         )}
 
         {/* Add Exercise Mid-Workout */}
