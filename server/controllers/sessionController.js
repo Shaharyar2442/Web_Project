@@ -1,5 +1,6 @@
 import Session from '../models/Session.js';
 import Routine from '../models/Routine.js';
+import PRRecord from '../models/PRRecord.js';
 
 export const getActiveSession = async (req, res) => {
   try {
@@ -85,7 +86,7 @@ export const finishSession = async (req, res) => {
   const { exercises } = req.body;
   
   try {
-    const session = await Session.findOne({ _id: req.params.id, user: req.user._id, isActive: true });
+    const session = await Session.findOne({ _id: req.params.id, user: req.user._id, isActive: true }).populate('exercises.exercise');
     if (!session) return res.status(404).json({ message: 'Active session not found' });
 
     session.isActive = false;
@@ -100,15 +101,49 @@ export const finishSession = async (req, res) => {
 
     let totalVolume = 0;
     let setsCompleted = 0;
+    const prUpdates = [];
 
     session.exercises.forEach(ex => {
       ex.sets.forEach(set => {
         if (set.isCompleted) {
           setsCompleted += 1;
           totalVolume += (set.reps * set.weight);
+
+          if (set.weight > 0 && set.reps > 0) {
+            const estimatedOneRM = set.weight * (1 + (set.reps / 30));
+            const exerciseId = ex.exercise._id || ex.exercise;
+            const exerciseName = ex.exercise.name || 'Unknown Exercise';
+
+            prUpdates.push({
+              exerciseId,
+              exerciseName,
+              weight: set.weight,
+              reps: set.reps,
+              estimatedOneRM,
+              date: session.endTime
+            });
+          }
         }
       });
     });
+
+    // Process PRs sequentially to avoid race conditions with multiple sets of same exercise
+    for (const pr of prUpdates) {
+      const existingPR = await PRRecord.findOne({ user: req.user._id, exercise: pr.exerciseId });
+      if (!existingPR || pr.estimatedOneRM > existingPR.estimatedOneRM) {
+        await PRRecord.findOneAndUpdate(
+          { user: req.user._id, exercise: pr.exerciseId },
+          {
+            exerciseName: pr.exerciseName,
+            weight: pr.weight,
+            reps: pr.reps,
+            estimatedOneRM: pr.estimatedOneRM,
+            date: pr.date
+          },
+          { upsert: true, new: true, returnDocument: 'after' }
+        );
+      }
+    }
 
     session.totalVolume = totalVolume;
     session.setsCompleted = setsCompleted;

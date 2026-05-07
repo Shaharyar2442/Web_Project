@@ -31,6 +31,7 @@ const Navbar = () => {
             <Link to="/dashboard" className="hover:text-secondary hover:underline underline-offset-8 transition-all">Dashboard</Link>
             <Link to="/exercises" className="hover:text-secondary hover:underline underline-offset-8 transition-all">Exercises</Link>
             <Link to="/routines" className="hover:text-secondary hover:underline underline-offset-8 transition-all">Routines</Link>
+            <Link to="/progress" className="hover:text-secondary hover:underline underline-offset-8 transition-all">Progress</Link>
           </div>
         )}
 
