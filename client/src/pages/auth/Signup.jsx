@@ -15,7 +15,8 @@ const signupSchema = z.object({
     .regex(/[a-z]/, 'Must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Must contain at least one number')
     .regex(/[^A-Za-z0-9]/, 'Must contain at least one special character'),
-  confirmPassword: z.string()
+  confirmPassword: z.string(),
+  role: z.enum(['user', 'admin']).default('user')
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"]
@@ -31,7 +32,7 @@ const Signup = () => {
   });
 
   const onSubmit = async (data) => {
-    const result = await registerAuth(data.name, data.email, data.password);
+    const result = await registerAuth(data.name, data.email, data.password, data.role);
     if (result.success) {
       toast.success('Account created! Welcome to BreakingIron.');
       navigate('/dashboard');
@@ -84,6 +85,17 @@ const Signup = () => {
               className="w-full bg-background border border-borderDark rounded-sm p-3 text-textLight focus:outline-none focus:border-primary transition-colors"
             />
             {errors.confirmPassword && <p className="text-error text-xs mt-1">{errors.confirmPassword.message}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm text-textMuted mb-1 font-bold uppercase">Account Type</label>
+            <select
+              {...register('role')}
+              className="w-full bg-background border border-borderDark rounded-sm p-3 text-textLight focus:outline-none focus:border-primary transition-colors cursor-pointer"
+            >
+              <option value="user">Standard User</option>
+              <option value="admin">Platform Admin (Demo)</option>
+            </select>
           </div>
 
           <button 

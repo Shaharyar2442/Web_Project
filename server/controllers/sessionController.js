@@ -197,15 +197,58 @@ export const getHistory = async (req, res) => {
       .sort({ endTime: -1 });
 
     const totalWorkouts = sessions.length;
-    const totalVolume = sessions.reduce((sum, s) => sum + (s.totalVolume || 0), 0);
-    const totalSets = sessions.reduce((sum, s) => sum + (s.setsCompleted || 0), 0);
+    let totalVolume = 0;
+    let totalSets = 0;
+
+    const muscleVolumeMap = {};
+    const activityDates = {};
+
+    sessions.forEach(s => {
+      totalVolume += (s.totalVolume || 0);
+      totalSets += (s.setsCompleted || 0);
+
+      // Heatmap dates aggregation
+      if (s.endTime) {
+        // use local date if possible, but simpler to use ISO string date part
+        const dateString = new Date(s.endTime).toISOString().split('T')[0];
+        activityDates[dateString] = (activityDates[dateString] || 0) + 1;
+      }
+
+      // Muscle volume aggregation
+      s.exercises.forEach(ex => {
+        if (ex.exercise && ex.exercise.muscleGroup) {
+          const muscle = ex.exercise.muscleGroup;
+          let exVolume = 0;
+          ex.sets.forEach(set => {
+            if (set.isCompleted && set.weight > 0 && set.reps > 0) {
+              exVolume += (set.weight * set.reps);
+            }
+          });
+          if (exVolume > 0) {
+            muscleVolumeMap[muscle] = (muscleVolumeMap[muscle] || 0) + exVolume;
+          }
+        }
+      });
+    });
+
+    const heatmapData = Object.keys(activityDates).map(date => ({
+      date,
+      count: activityDates[date]
+    }));
+
+    const muscleData = Object.keys(muscleVolumeMap).map(muscle => ({
+      name: muscle,
+      value: muscleVolumeMap[muscle]
+    })).sort((a, b) => b.value - a.value);
 
     res.status(200).json({
       sessions,
       stats: {
         totalWorkouts,
         totalVolume,
-        totalSets
+        totalSets,
+        heatmapData,
+        muscleData
       }
     });
   } catch (error) {

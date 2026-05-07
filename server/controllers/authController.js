@@ -19,7 +19,7 @@ export const register = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
-  const { name, email, password } = req.body;
+  const { name, email, password, role } = req.body;
 
   try {
     const existingUser = await User.findOne({ email });
@@ -34,7 +34,7 @@ export const register = async (req, res) => {
       name,
       email,
       passwordHash,
-      role: 'user',
+      role: role === 'admin' ? 'admin' : 'user',
       isActive: true
     });
 
