@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../../api/axios';
 import { toast } from 'react-hot-toast';
@@ -6,6 +6,12 @@ import { Dumbbell, X, Plus } from 'lucide-react';
 import TimerDisplay from '../../components/session/TimerDisplay';
 import SetRow from '../../components/session/SetRow';
 import AddExerciseToSessionModal from '../../components/session/AddExerciseToSessionModal';
+
+const generateObjectId = () => {
+  const timestamp = Math.floor(Date.now() / 1000).toString(16);
+  const randomChars = Array.from({length: 16}, () => Math.floor(Math.random() * 16).toString(16)).join('');
+  return timestamp + randomChars;
+};
 
 const LiveSession = () => {
   const navigate = useNavigate();
@@ -18,9 +24,14 @@ const LiveSession = () => {
   const [isAddingExercise, setIsAddingExercise] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [summaryData, setSummaryData] = useState(null);
+  
+  const initialized = useRef(false);
 
   // Initialize Session
   useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    
     const initializeSession = async () => {
       try {
         const { data: activeSession } = await api.get('/sessions/active');
@@ -87,7 +98,7 @@ const LiveSession = () => {
         return {
           ...ex,
           sets: [...ex.sets, {
-            id: Math.random().toString(36).substr(2, 9),
+            id: generateObjectId(),
             reps: lastSet ? lastSet.reps : 10,
             weight: lastSet ? lastSet.weight : 0,
             isCompleted: false,
@@ -103,11 +114,11 @@ const LiveSession = () => {
 
   const handleAddExerciseMidWorkout = (exercise) => {
     const newExercise = {
-      _id: Math.random().toString(36).substr(2, 9),
+      _id: generateObjectId(),
       exercise,
       order: session.exercises.length,
       sets: [{
-        id: Math.random().toString(36).substr(2, 9),
+        id: generateObjectId(),
         reps: 10,
         weight: 0,
         isCompleted: false,
@@ -130,6 +141,17 @@ const LiveSession = () => {
       setIsFinished(true);
     } catch (error) {
       toast.error('Failed to finish workout');
+    }
+  };
+
+  const handleCancelSession = async () => {
+    if (window.confirm("Are you sure you want to cancel this session? All data will be lost.")) {
+      try {
+        await api.delete(`/sessions/${session._id}`);
+        navigate('/dashboard');
+      } catch (error) {
+        toast.error('Failed to cancel session');
+      }
     }
   };
 
@@ -188,11 +210,7 @@ const LiveSession = () => {
         <div className="flex items-center gap-4">
           <TimerDisplay startTime={session.startTime} />
           <button 
-            onClick={() => {
-              if (window.confirm("Are you sure you want to cancel this session? All data will be lost.")) {
-                navigate('/dashboard');
-              }
-            }}
+            onClick={handleCancelSession}
             className="text-textMuted hover:text-error transition-colors p-2 rounded-sm hover:bg-background"
             title="Cancel Session"
           >

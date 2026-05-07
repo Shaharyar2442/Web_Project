@@ -14,6 +14,7 @@ import ExerciseLibrary from './pages/exercises/ExerciseLibrary';
 import RoutineList from './pages/routines/RoutineList';
 import RoutineBuilder from './pages/routines/RoutineBuilder';
 import LiveSession from './pages/session/LiveSession';
+import Dashboard from './pages/dashboard/Dashboard';
 
 const Home = () => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
@@ -23,13 +24,6 @@ const Home = () => (
     <p className="text-xl text-textMuted max-w-2xl">
       Phase 3: Authentication Frontend integrated.
     </p>
-  </div>
-);
-
-const Dashboard = () => (
-  <div className="p-4">
-    <h1 className="text-4xl text-primary mb-4">DASHBOARD</h1>
-    <p className="text-textMuted">Welcome back, iron breaker.</p>
   </div>
 );
 

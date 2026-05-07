@@ -57,9 +57,16 @@ export const startSession = async (req, res) => {
 };
 
 export const updateSession = async (req, res) => {
-  const { exercises } = req.body;
+  let { exercises } = req.body;
   
   try {
+    if (exercises) {
+      exercises = exercises.map(ex => ({
+        ...ex,
+        exercise: ex.exercise._id || ex.exercise
+      }));
+    }
+
     const session = await Session.findOneAndUpdate(
       { _id: req.params.id, user: req.user._id, isActive: true },
       { exercises },
@@ -85,7 +92,10 @@ export const finishSession = async (req, res) => {
     session.endTime = new Date();
     
     if (exercises) {
-      session.exercises = exercises;
+      session.exercises = exercises.map(ex => ({
+        ...ex,
+        exercise: ex.exercise._id || ex.exercise
+      }));
     }
 
     let totalVolume = 0;
@@ -110,7 +120,8 @@ export const finishSession = async (req, res) => {
       const routine = await Routine.findById(session.routine);
       if (routine) {
         session.exercises.forEach(sessionEx => {
-          const routineEx = routine.exercises.find(rEx => rEx.exercise.toString() === sessionEx.exercise._id.toString());
+          const exerciseId = sessionEx.exercise._id ? sessionEx.exercise._id.toString() : sessionEx.exercise.toString();
+          const routineEx = routine.exercises.find(rEx => rEx.exercise.toString() === exerciseId);
           if (routineEx) {
             sessionEx.sets.forEach((sessionSet, idx) => {
               if (routineEx.sets[idx] && sessionSet.note) {
@@ -126,6 +137,15 @@ export const finishSession = async (req, res) => {
     res.status(200).json(session);
   } catch (error) {
     res.status(500).json({ message: 'Error finishing session' });
+  }
+};
+
+export const deleteSession = async (req, res) => {
+  try {
+    await Session.findOneAndDelete({ _id: req.params.id, user: req.user._id });
+    res.status(200).json({ message: 'Session deleted' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting session' });
   }
 };
 
