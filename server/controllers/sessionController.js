@@ -29,7 +29,7 @@ export const startSession = async (req, res) => {
     };
 
     if (routineId) {
-      const routine = await Routine.findById(routineId);
+      const routine = await Routine.findById(routineId).populate('exercises.exercise');
       if (!routine) return res.status(404).json({ message: 'Routine not found' });
       
       newSessionData.name = routine.name;
@@ -37,13 +37,15 @@ export const startSession = async (req, res) => {
       
       // Map routine exercises to session exercises
       newSessionData.exercises = routine.exercises.map(ex => ({
-        exercise: ex.exercise,
+        exercise: ex.exercise._id || ex.exercise,
+        exerciseName: ex.exercise.name || 'Unknown Exercise',
         order: ex.order,
         sets: ex.sets.map(s => ({
           reps: s.reps,
           weight: s.weight,
           isCompleted: false,
-          note: s.note || ''
+          note: s.note || '',
+          isPR: false
         }))
       }));
     }
@@ -64,7 +66,8 @@ export const updateSession = async (req, res) => {
     if (exercises) {
       exercises = exercises.map(ex => ({
         ...ex,
-        exercise: ex.exercise._id || ex.exercise
+        exercise: ex.exercise._id || ex.exercise,
+        exerciseName: ex.exerciseName || (ex.exercise && ex.exercise.name) || 'Unknown Exercise'
       }));
     }
 
@@ -95,7 +98,8 @@ export const finishSession = async (req, res) => {
     if (exercises) {
       session.exercises = exercises.map(ex => ({
         ...ex,
-        exercise: ex.exercise._id || ex.exercise
+        exercise: ex.exercise._id || ex.exercise,
+        exerciseName: ex.exerciseName || (ex.exercise && ex.exercise.name) || 'Unknown Exercise'
       }));
     }
 
@@ -112,9 +116,10 @@ export const finishSession = async (req, res) => {
           if (set.weight > 0 && set.reps > 0) {
             const estimatedOneRM = set.weight * (1 + (set.reps / 30));
             const exerciseId = ex.exercise._id || ex.exercise;
-            const exerciseName = ex.exercise.name || 'Unknown Exercise';
+            const exerciseName = ex.exercise.name || ex.exerciseName || 'Unknown Exercise';
 
             prUpdates.push({
+              setRef: set,
               exerciseId,
               exerciseName,
               weight: set.weight,
@@ -131,6 +136,7 @@ export const finishSession = async (req, res) => {
     for (const pr of prUpdates) {
       const existingPR = await PRRecord.findOne({ user: req.user._id, exercise: pr.exerciseId });
       if (!existingPR || pr.estimatedOneRM > existingPR.estimatedOneRM) {
+        pr.setRef.isPR = true; // Flag the set as a PR right before saving the session
         await PRRecord.findOneAndUpdate(
           { user: req.user._id, exercise: pr.exerciseId },
           {
@@ -140,7 +146,7 @@ export const finishSession = async (req, res) => {
             estimatedOneRM: pr.estimatedOneRM,
             date: pr.date
           },
-          { upsert: true, new: true, returnDocument: 'after' }
+          { upsert: true, new: true }
         );
       }
     }
@@ -204,5 +210,60 @@ export const getHistory = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching history' });
+  }
+};
+
+export const getSingleSession = async (req, res) => {
+  try {
+    const session = await Session.findOne({ _id: req.params.id, user: req.user._id })
+      .populate('exercises.exercise')
+      .populate('routine');
+    if (!session) return res.status(404).json({ message: 'Session not found' });
+    res.status(200).json(session);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching session details' });
+  }
+};
+
+export const getPreviousSessionData = async (req, res) => {
+  try {
+    const { routineId } = req.query;
+
+    let previousRoutineSession = null;
+    if (routineId && routineId !== 'undefined' && routineId !== 'null') {
+      previousRoutineSession = await Session.findOne({ 
+        user: req.user._id, 
+        routine: routineId, 
+        isActive: false 
+      }).sort({ endTime: -1 }).populate('exercises.exercise');
+    }
+
+    const allSessions = await Session.find({ user: req.user._id, isActive: false })
+      .sort({ endTime: -1 })
+      .select('name endTime exercises');
+
+    const lastTimeMap = {};
+    for (const s of allSessions) {
+      for (const ex of s.exercises) {
+        const exId = ex.exercise.toString();
+        if (!lastTimeMap[exId]) {
+          const completedSets = ex.sets.filter(set => set.isCompleted);
+          if (completedSets.length > 0) {
+            lastTimeMap[exId] = {
+              sessionName: s.name,
+              date: s.endTime,
+              sets: completedSets.map(set => ({ reps: set.reps, weight: set.weight }))
+            };
+          }
+        }
+      }
+    }
+
+    res.status(200).json({
+      previousRoutineSession,
+      lastTimeMap
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching previous data' });
   }
 };

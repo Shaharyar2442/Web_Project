@@ -15,6 +15,7 @@ import RoutineList from './pages/routines/RoutineList';
 import RoutineBuilder from './pages/routines/RoutineBuilder';
 import LiveSession from './pages/session/LiveSession';
 import Dashboard from './pages/dashboard/Dashboard';
+import SessionDetail from './pages/dashboard/SessionDetail';
 import ProgressDashboard from './pages/progress/ProgressDashboard';
 
 const Home = () => (
@@ -53,6 +54,7 @@ function App() {
               <Route path="/routines/create" element={<RoutineBuilder />} />
               <Route path="/routines/edit/:id" element={<RoutineBuilder />} />
               <Route path="/session/start" element={<LiveSession />} />
+              <Route path="/history/:id" element={<SessionDetail />} />
               <Route path="/progress" element={<ProgressDashboard />} />
               {/* More protected routes will go here in future phases */}
             </Route>

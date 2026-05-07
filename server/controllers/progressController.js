@@ -1,8 +1,28 @@
 import Session from '../models/Session.js';
 import PRRecord from '../models/PRRecord.js';
+import Exercise from '../models/Exercise.js';
 
 export const getPRs = async (req, res) => {
   try {
+    const prsMissingName = await PRRecord.find({ 
+      user: req.user._id, 
+      $or: [
+        { exerciseName: { $exists: false } },
+        { exerciseName: 'Unknown' },
+        { exerciseName: 'Unknown Exercise' }
+      ]
+    });
+
+    if (prsMissingName.length > 0) {
+      for (const pr of prsMissingName) {
+        const ex = await Exercise.findById(pr.exercise);
+        if (ex && ex.name) {
+          pr.exerciseName = ex.name;
+          await pr.save();
+        }
+      }
+    }
+
     const prs = await PRRecord.find({ user: req.user._id }).sort({ updatedAt: -1 });
     res.status(200).json(prs);
   } catch (error) {
