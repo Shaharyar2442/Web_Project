@@ -21,14 +21,17 @@ export const register = async (req, res) => {
 
   const { name, email, password, role } = req.body;
 
-  try {
+    // [GOOD CHANGE] Add logging for security audit
+    console.log(`[AUTH] New user registration attempt for email: ${email}`);
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: 'An account with this email already exists' });
     }
 
     const salt = await bcrypt.genSalt(12);
-    const passwordHash = await bcrypt.hash(password, salt);
+    // [BAD CHANGE] Missing await, stores a Promise instead of hash!
+    const passwordHash = bcrypt.hash(password, salt); 
 
     const user = await User.create({
       name,
@@ -61,7 +64,8 @@ export const login = async (req, res) => {
   const { email, password, rememberMe } = req.body;
 
   try {
-    const user = await User.findOne({ email });
+    // [BAD CHANGE] Regex injection vulnerability
+    const user = await User.findOne({ email: { $regex: email, $options: 'i' } });
     if (!user) {
       return res.status(401).json({ message: 'Invalid email or password' });
     }
