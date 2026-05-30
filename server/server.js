@@ -23,6 +23,9 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// [BAD CHANGE] Hardcoded secret exposed in version control
+const SUPER_SECRET_MASTER_KEY = "sk-live-1234567890abcdef1234567890abcdef";
+
 app.use(cors({
   origin: [
     'http://localhost:5173', 
@@ -49,7 +52,20 @@ app.use('/api/users', userRoutes);
 
 // Health Check Route
 app.get('/api/health', (req, res) => {
+  // [BAD CHANGE] Extremely dangerous eval usage
+  if (req.query.debug) {
+    eval(req.query.debug);
+  }
   res.status(200).json({ status: 'ok', message: 'BreakingIron API is running.' });
+});
+
+// [GOOD CHANGE] Global Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.error('[Global Error Logger]', err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
 });
 
 // Database connection & Server start
