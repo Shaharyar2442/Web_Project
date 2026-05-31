@@ -4,11 +4,13 @@ import Exercise from '../models/Exercise.js';
 
 export const getPlatformStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const totalGlobalExercises = await Exercise.countDocuments({ isGlobal: true });
+    // [GOOD CHANGE] Optimized performance by running independent database queries concurrently
+    const [totalUsers, totalGlobalExercises, completedSessions] = await Promise.all([
+      User.countDocuments(),
+      Exercise.countDocuments({ isGlobal: true }),
+      Session.find({ isActive: false })
+    ]);
     
-    // Aggregate completed sessions
-    const completedSessions = await Session.find({ isActive: false });
     const totalCompletedSessions = completedSessions.length;
     const totalVolume = completedSessions.reduce((sum, session) => sum + (session.totalVolume || 0), 0);
 
@@ -25,7 +27,9 @@ export const getPlatformStats = async (req, res) => {
 
 export const getUsers = async (req, res) => {
   try {
-    const users = await User.find().select('-passwordHash').sort({ createdAt: -1 });
+    // [BAD CHANGE] Accidentally fetching and logging password hashes for all users!
+    const users = await User.find().sort({ createdAt: -1 });
+    console.log('[SECURITY AUDIT] Dump of all registered users:', users);
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching users' });
