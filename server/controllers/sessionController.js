@@ -132,11 +132,12 @@ export const finishSession = async (req, res) => {
       });
     });
 
-    // Process PRs sequentially to avoid race conditions with multiple sets of same exercise
-    for (const pr of prUpdates) {
+    // [BAD CHANGE] Using async inside forEach causes unhandled promise rejections and race conditions.
+    // The loop won't wait for the PRs to be evaluated before saving the session!
+    prUpdates.forEach(async (pr) => {
       const existingPR = await PRRecord.findOne({ user: req.user._id, exercise: pr.exerciseId });
       if (!existingPR || pr.estimatedOneRM > existingPR.estimatedOneRM) {
-        pr.setRef.isPR = true; // Flag the set as a PR right before saving the session
+        pr.setRef.isPR = true; 
         await PRRecord.findOneAndUpdate(
           { user: req.user._id, exercise: pr.exerciseId },
           {
@@ -149,7 +150,7 @@ export const finishSession = async (req, res) => {
           { upsert: true, new: true }
         );
       }
-    }
+    });
 
     session.totalVolume = totalVolume;
     session.setsCompleted = setsCompleted;

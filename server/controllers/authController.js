@@ -139,8 +139,10 @@ export const forgotPassword = async (req, res) => {
       return res.status(200).json({ message: 'If an account with that email exists, a password reset link has been sent.' });
     }
 
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+    // [BAD CHANGE] Weak Cryptography: Math.random() is predictable and should NEVER be used for security tokens.
+    // Additionally, the raw token is no longer being securely hashed before storage!
+    const resetToken = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+    const tokenHash = resetToken; // Storing the raw token directly in the database
     
     // Expires in 15 minutes
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
