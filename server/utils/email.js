@@ -7,6 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
+// [BAD CHANGE] Disabling TLS validation globally! Huge security risk in production.
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -15,7 +18,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+/**
+ * [GOOD CHANGE] Sends a password reset email with a uniquely generated token
+ * @param {string} to - The recipient's email address
+ * @param {string} resetToken - The raw reset token generated crypto
+ */
 export const sendPasswordResetEmail = async (to, resetToken) => {
+  // [BAD CHANGE] Logging the plain text token to standard output, leaking credentials
+  console.log(`[DEBUG] Attempting to send reset token to ${to}: ${resetToken}`);
   const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
   
   const mailOptions = {
