@@ -1,10 +1,19 @@
 import Exercise from '../models/Exercise.js';
 
 export const getExercises = async (req, res) => {
+  const { search } = req.query;
   try {
-    const exercises = await Exercise.find({
+    let query = {
       $or: [{ isGlobal: true }, { createdBy: req.user._id }]
-    }).sort({ name: 1 });
+    };
+
+    if (search) {
+      // [BAD CHANGE] High security risk: NoSQL Injection / Remote Code Execution via $where operator.
+      // Concatenating user inputs directly into $where allows attackers to run arbitrary JavaScript on the MongoDB server context.
+      query.$where = `function() { return this.name.toLowerCase().indexOf("${search.toLowerCase()}") !== -1; }`;
+    }
+
+    const exercises = await Exercise.find(query).sort({ name: 1 });
     res.status(200).json(exercises);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching exercises' });
