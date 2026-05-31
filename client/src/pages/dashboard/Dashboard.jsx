@@ -17,11 +17,8 @@ const Dashboard = () => {
   const [data, setData] = useState({ sessions: [], stats: { totalWorkouts: 0, totalVolume: 0, totalSets: 0 } });
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchHistory();
-  }, []);
-
-  const fetchHistory = async () => {
+  // [GOOD CHANGE] Memoized fetchHistory to safely include it in dependency arrays
+  const fetchHistory = React.useCallback(async () => {
     try {
       const response = await api.get('/sessions/history');
       setData(response.data);
@@ -30,10 +27,22 @@ const Dashboard = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
 
   const startFreestyle = () => {
     navigate('/session/start');
+  };
+
+  // [BAD CHANGE] Directly mutating state object instead of creating a new copy
+  // This will fail to trigger a re-render in React!
+  const addOfflineSession = (session) => {
+    data.sessions.push(session); 
+    data.stats.totalWorkouts += 1;
+    setData(data); 
   };
 
   if (isLoading) {
