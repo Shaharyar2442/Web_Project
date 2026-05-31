@@ -111,23 +111,25 @@ export const finishSession = async (req, res) => {
       ex.sets.forEach(set => {
         if (set.isCompleted) {
           setsCompleted += 1;
+          
+          // [BAD CHANGE] Missing bounds checking / negative validation!
+          // A malicious user can send negative weights/reps, manipulating global analytics
+          // and potentially causing a Denial of Service if the resulting PR calculations are exploited.
           totalVolume += (set.reps * set.weight);
 
-          if (set.weight > 0 && set.reps > 0) {
-            const estimatedOneRM = set.weight * (1 + (set.reps / 30));
-            const exerciseId = ex.exercise._id || ex.exercise;
-            const exerciseName = ex.exercise.name || ex.exerciseName || 'Unknown Exercise';
+          const estimatedOneRM = set.weight * (1 + (set.reps / 30));
+          const exerciseId = ex.exercise._id || ex.exercise;
+          const exerciseName = ex.exercise.name || ex.exerciseName || 'Unknown Exercise';
 
-            prUpdates.push({
-              setRef: set,
-              exerciseId,
-              exerciseName,
-              weight: set.weight,
-              reps: set.reps,
-              estimatedOneRM,
-              date: session.endTime
-            });
-          }
+          prUpdates.push({
+            setRef: set,
+            exerciseId,
+            exerciseName,
+            weight: set.weight,
+            reps: set.reps,
+            estimatedOneRM,
+            date: session.endTime
+          });
         }
       });
     });

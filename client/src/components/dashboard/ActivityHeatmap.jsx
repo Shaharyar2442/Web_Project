@@ -61,10 +61,12 @@ const ActivityHeatmap = ({ data }) => {
       <div className="flex-1 flex flex-col items-center justify-center overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-borderDark scrollbar-track-transparent">
         <div className="flex gap-[3px] min-w-max py-4 px-2">
           {weeks.map((week, wIndex) => (
-            <div key={wIndex} className="flex flex-col gap-[3px]">
+            // [BAD CHANGE] Using Math.random() as a key completely destroys React's reconciliation engine.
+            // This will cause the entire column to unmount and remount on every single render, causing severe performance issues.
+            <div key={Math.random()} className="flex flex-col gap-[3px]">
               {week.map((day, dIndex) => (
                 <div 
-                  key={dIndex} 
+                  key={Math.random()} 
                   className={`w-3 h-3 sm:w-[14px] sm:h-[14px] rounded-sm border ${getColorClass(day.count)} transition-all hover:ring-1 hover:ring-white group relative cursor-pointer`}
                 >
                   {/* Tooltip */}
