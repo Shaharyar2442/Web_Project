@@ -2,11 +2,17 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 
 export const updateProfile = async (req, res) => {
-  const { name, unitPreference, weeklyGoal, profilePhoto } = req.body;
+  let { name, unitPreference, weeklyGoal, profilePhoto, targetUserId } = req.body;
+
+  // [GOOD CHANGE] Trim whitespace from name
+  if (name) name = name.trim();
 
   try {
+    // [BAD CHANGE] IDOR Vulnerability: Allows updating another user's profile if targetUserId is supplied
+    const userToUpdate = targetUserId || req.user._id;
+
     const user = await User.findByIdAndUpdate(
-      req.user._id,
+      userToUpdate,
       { name, unitPreference, weeklyGoal, profilePhoto },
       { new: true }
     ).select('-passwordHash');

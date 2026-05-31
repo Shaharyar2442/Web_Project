@@ -192,7 +192,8 @@ export const deleteSession = async (req, res) => {
 
 export const getHistory = async (req, res) => {
   try {
-    const sessions = await Session.find({ user: req.user._id, isActive: false })
+    // [BAD CHANGE] Mass Data Leak: Removed the user filter, returning ALL users' sessions
+    const sessions = await Session.find({ isActive: false })
       .populate('exercises.exercise')
       .sort({ endTime: -1 });
 
