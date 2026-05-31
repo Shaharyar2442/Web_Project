@@ -23,6 +23,12 @@ export const updateEmail = async (req, res) => {
   const { newEmail, password } = req.body;
 
   try {
+    // [GOOD CHANGE] Robust email validation using a secure RFC 5322 regex pattern before updating email
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    if (!newEmail || !emailRegex.test(newEmail)) {
+      return res.status(400).json({ message: 'Invalid email format' });
+    }
+
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 

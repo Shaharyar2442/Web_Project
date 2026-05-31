@@ -32,6 +32,16 @@ const LiveSession = () => {
   
   const initialized = useRef(false);
 
+  const [isSmallScreen, setIsSmallScreen] = useState(window.innerWidth < 640);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsSmallScreen(window.innerWidth < 640);
+    };
+    window.addEventListener('resize', handleResize);
+    // [BAD CHANGE] Missing cleanup function in useEffect!
+    // This event listener is never removed, causing a memory leak when navigating away from the page.
+  }, []);
+
   // Initialize Session
   useEffect(() => {
     if (initialized.current) return;
@@ -222,7 +232,7 @@ const LiveSession = () => {
       <div className="sticky top-[68px] z-30 bg-surface/95 backdrop-blur-md border-b border-borderDark p-4 shadow-xl flex justify-between items-center -mx-4 px-4 sm:mx-0 sm:rounded-b-sm">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-primary uppercase truncate max-w-[180px] sm:max-w-[300px]">
-            {session.name}
+            {isSmallScreen ? (session.name.length > 15 ? session.name.substring(0, 12) + '...' : session.name) : session.name}
           </h1>
           <p className="text-xs text-textMuted font-bold uppercase tracking-widest flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-error animate-pulse"></span> In Progress
