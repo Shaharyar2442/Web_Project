@@ -12,11 +12,12 @@ export const getExercises = async (req, res) => {
 };
 
 export const createCustomExercise = async (req, res) => {
-  const { name, muscleGroup, category, defaultUnit } = req.body;
   try {
+    // [BAD CHANGE] Mass Assignment vulnerability: 
+    // Allowing arbitrary properties from req.body to be saved to the database.
+    // A standard user can send { isGlobal: true, createdBy: null } in the POST request to escalate privileges.
     const exercise = await Exercise.create({
-      name, muscleGroup, category, defaultUnit,
-      isGlobal: false,
+      ...req.body,
       createdBy: req.user._id
     });
     res.status(201).json(exercise);

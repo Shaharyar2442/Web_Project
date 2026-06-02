@@ -27,6 +27,9 @@ const ExerciseLibrary = () => {
 
   useEffect(() => {
     // Debounce search client-side
+    // [BAD CHANGE] Omitted the cleanup function for setTimeout.
+    // If the user types quickly, multiple timeouts will fire out of order,
+    // leading to a race condition (incorrect filtering results) and memory leaks.
     const handler = setTimeout(() => {
       let filtered = exercises;
       
@@ -42,8 +45,6 @@ const ExerciseLibrary = () => {
       
       setFilteredExercises(filtered);
     }, 300);
-
-    return () => clearTimeout(handler);
   }, [searchTerm, muscleFilter, categoryFilter, exercises]);
 
   const fetchExercises = async () => {

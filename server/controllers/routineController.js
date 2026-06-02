@@ -1,4 +1,5 @@
 import Routine from '../models/Routine.js';
+import Exercise from '../models/Exercise.js';
 
 export const getRoutines = async (req, res) => {
   try {
@@ -25,6 +26,19 @@ export const getRoutineById = async (req, res) => {
 export const createRoutine = async (req, res) => {
   const { name, notes, exercises } = req.body;
   try {
+    // [GOOD CHANGE] Robust input validation: verify that all referenced exercises exist 
+    // and are either global or created by the current user.
+    if (exercises && Array.isArray(exercises)) {
+      const exerciseIds = exercises.map(ex => ex.exercise);
+      const validExercises = await Exercise.find({
+        _id: { $in: exerciseIds },
+        $or: [{ isGlobal: true }, { createdBy: req.user._id }]
+      });
+      if (validExercises.length !== exerciseIds.length) {
+        return res.status(400).json({ message: 'One or more referenced exercises are invalid or unauthorized' });
+      }
+    }
+
     const routine = await Routine.create({
       name,
       notes,
@@ -40,8 +54,9 @@ export const createRoutine = async (req, res) => {
 export const updateRoutine = async (req, res) => {
   const { name, notes, exercises } = req.body;
   try {
-    const routine = await Routine.findOneAndUpdate(
-      { _id: req.params.id, user: req.user._id },
+    // [BAD CHANGE] IDOR vulnerability: updating routine without verifying user ownership
+    const routine = await Routine.findByIdAndUpdate(
+      req.params.id,
       { name, notes, exercises },
       { new: true }
     );
